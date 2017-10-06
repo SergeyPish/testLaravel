@@ -62,13 +62,27 @@
         <div class="header">
             <div><img src="/images/logo_sm.jpg" alt="Logo" title="logo"></div>
             <div  style='margin: 10px;  text-align: left'>
-                <input type="button" value="Select All"/>
-                <input type="button" value="Export"/>
+                <input id="select" type="button" value="Select All"/>
+                <input type="submit" value="Export" form="form-student"/>
             </div>
         </div>
 
-        <form>
-
+        <form action="{{route('export')}}" method="POST" id="form-student">
+            <ul>
+                <li>
+                    <label>
+                        <input name="type" type="radio" value="student" checked="checked"/>
+                        Выгрузить только студентов
+                    </label>
+                </li>
+                <li>
+                    <label>
+                        <input name="type" type="radio" value="all" />
+                        Выгрузить все
+                    </label>
+                </li>
+            </ul>
+            {{csrf_field()}}
             <div style='margin: 10px; text-align: center;'>
                 <table class="student-table">
                     <tr>
@@ -83,10 +97,10 @@
                     @if(  count($students) > 0 )
                     @foreach($students as $student)
                     <tr>
-                        <td><input type="checkbox" name="studentId" value="{{$student['id']}}"></td>
-                        <td style=' text-align: left;'>{{$student['firstname']}}</td>
-                        <td style=' text-align: left;'>{{$student['surname']}}</td>
-                        <td style=' text-align: left;'>{{$student['email']}}</td>
+                        <td><input type="checkbox" name="studentId[]" value="{{$student->id}}"></td>
+                        <td style=' text-align: left;'>{{$student->firstname}}</td>
+                        <td style=' text-align: left;'>{{$student->surname}}</td>
+                        <td style=' text-align: left;'>{{$student->email}}</td>
                         <td style=' text-align: left;'>{{$student['course']['university']}}</td>
                         <td style=' text-align: left;'>{{$student['course']['course_name']}}</td>
                     </tr>
@@ -103,5 +117,16 @@
         
         
     </body>
+
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <script>
+        $("#select").click(function() {
+            var checkBoxes = $('input[name*=\'studentId\']');
+            checkBoxes.prop("checked", !checkBoxes.prop("checked"));
+        });
+    </script>
 
 </html>
