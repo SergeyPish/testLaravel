@@ -30,79 +30,52 @@ class ExportController extends Controller
 
     public function export(Request $request)
     {
+        $headers = array(
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=student.csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        );
+
         switch($request->input('type')) {
             case 'student':
-                return $this->exportStudentsToCSV($request);
+                $columns = array('id', 'Forname', 'Surname', 'Email');
                 break;
             case 'all':
-                return $this->exportCourseAttendenceToCSV($request);
+                $columns = array('id', 'Forname', 'Surname', 'Email', 'University', 'Course');
                 break;
         }
-    }
 
-    /**
-     * Exports all student data to a CSV file
-     */
-    public function exportStudentsToCSV($request)
-    {
         if(!empty($request->input('studentId'))) {
-            $headers = array(
-                "Content-type" => "text/csv",
-                "Content-Disposition" => "attachment; filename=student.csv",
-                "Pragma" => "no-cache",
-                "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-                "Expires" => "0"
-            );
-
-            $columns = array('id', 'Forname', 'Surname', 'Email');
-            $callback = function() use ($request,$columns) {
-                $file = fopen('php://output', 'w');
-                fputcsv($file, $columns);
-                foreach ($request->input('studentId') as $studentId) {
-                    $student = Students::find($studentId);
-                    if ($student) {
-                        fputcsv($file, array($student->id, $student->firstname, $student->surname, $student->email));
-                    }
-                }
-                fclose($file);
-            };
-
+            $callback = $this->createCsv($request, $columns);
             return response()->stream($callback, 200, $headers);
         } else {
             return redirect()->back();
         }
     }
 
-    /**
-     * Exports the total amount of students that are taking each course to a CSV file
-     */
-    public function exportCourseAttendenceToCSV($request)
+    public function createCsv($request, $columns)
     {
-        if(!empty($request->input('studentId'))) {
-            $headers = array(
-                "Content-type" => "text/csv",
-                "Content-Disposition" => "attachment; filename=student.csv",
-                "Pragma" => "no-cache",
-                "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-                "Expires" => "0"
-            );
-
-            $columns = array('id', 'Forname', 'Surname', 'Email', 'University', 'Course');
-            $callback = function() use ($request,$columns) {
-                $file = fopen('php://output', 'w');
-                fputcsv($file, $columns);
-                foreach ($request->input('studentId') as $studentId) {
-                    $student = Students::find($studentId);
-                    if ($student) {
-                        fputcsv($file, array($student->id, $student->firstname, $student->surname, $student->email, $student['course']['university'], $student['course']['course_name']));
+        $callback = function() use ($request,$columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            foreach ($request->input('studentId') as $studentId) {
+                $student = Students::find($studentId);
+                if ($student) {
+                    switch($request->input('type')){
+                        case 'student':
+                            fputcsv($file, array($student->id, $student->firstname, $student->surname, $student->email));
+                            break;
+                        case 'all':
+                            fputcsv($file, array($student->id, $student->firstname, $student->surname, $student->email, $student['course']['university'], $student['course']['course_name']));
+                            break;
                     }
                 }
-                fclose($file);
-            };
+            }
+            fclose($file);
+        };
 
-            return response()->stream($callback, 200, $headers);
-        } else {
-            return redirect()->back();
-        }
+        return $callback;
     }
 }

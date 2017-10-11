@@ -19,8 +19,8 @@ class CreateStudentTable extends Migration
             $table->text('surname');
             $table->text('email');
             $table->text('nationality');
-            $table->integer('address_id');
-            $table->integer('course_id');
+            $table->integer('address_id')->default(0);
+            $table->integer('course_id')->default(0);
             $table->timestamps();
         });
     }
